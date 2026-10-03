@@ -1,0 +1,24 @@
+(
+echo {
+echo   "name": "echo-api",
+echo   "version": "1.0.0",
+echo   "description": "ECHO Autonomous AI Sales Intelligence - Backend API",
+echo   "main": "dist/index.js",
+echo   "scripts": {
+echo     "dev": "tsx watch src/index.ts",
+echo     "build": "tsc",
+echo     "start": "node dist/index.js",
+echo     "test": "jest",
+echo     "migrate": "node dist/db/migrate.js"
+echo   },
+echo   "dependencies": {
+echo     "express": "^4.18.2",
+echo     "typescript": "^5.0.0",
+echo     "axios": "^1.6.0",
+echo     "dotenv": "^16.0.0"
+echo   },
+echo   "devDependencies": {
+echo     "tsx": "^3.12.0"
+echo   }
+echo }
+) > backend\package.json
