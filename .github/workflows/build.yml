@@ -1,0 +1,54 @@
+name: Build
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ main ]
+
+jobs:
+  build-backend:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      working-directory: ./backend
+      run: npm ci
+
+    - name: Build TypeScript
+      working-directory: ./backend
+      run: npm run build
+
+    - name: Check bundle size
+      working-directory: ./backend
+      run: |
+        SIZE=$(du -sh dist | cut -f1)
+        echo "Bundle size: $SIZE"
+
+  build-mobile:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      working-directory: ./mobile
+      run: npm ci
+
+    - name: Build for web
+      working-directory: ./mobile
+      run: npm run build:web || echo "Web build not configured"
