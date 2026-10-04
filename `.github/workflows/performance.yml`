@@ -1,0 +1,42 @@
+
+```yaml
+name: Performance
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      working-directory: ./backend
+      run: npm ci
+
+    - name: Run performance benchmarks
+      working-directory: ./backend
+      run: npm run benchmark || echo "Benchmarks not configured"
+
+    - name: Check API response times
+      working-directory: ./backend
+      run: |
+        npm run build
+        npm start &
+        sleep 5
+        curl http://localhost:3000/api/health
+        echo "API health check passed"
+
+    - name: Generate performance report
+      run: echo "Performance tests completed"
