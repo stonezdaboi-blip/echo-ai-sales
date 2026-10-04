@@ -1,0 +1,30 @@
+{
+  "name": "echo-ai-sales",
+  "version": "1.0.0",
+  "description": "ECHO Autonomous AI Sales Intelligence System",
+  "main": "index.js",
+  "scripts": {
+    "install-all": "npm install && cd backend && npm install && cd ../mobile && npm install",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd mobile && npm start\"",
+    "backend": "cd backend && npm run dev",
+    "mobile": "cd mobile && npm start",
+    "test": "concurrently \"cd backend && npm test\" \"cd mobile && npm test\"",
+    "build": "concurrently \"cd backend && npm run build\" \"cd mobile && npm run build\"",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "deploy": "cd backend && npm run build && echo 'Ready for deployment'"
+  },
+  "keywords": [
+    "sales",
+    "intelligence",
+    "research",
+    "ai",
+    "autonomous",
+    "prospects"
+  ],
+  "author": "stonezdaboi-blip",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.0.0"
+  }
+}
