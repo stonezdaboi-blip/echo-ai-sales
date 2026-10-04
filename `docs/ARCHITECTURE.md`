@@ -1,0 +1,113 @@
+```markdown
+# ECHO Architecture
+
+## System Overview
+┌─────────────────────────────────────────────────────────┐
+│                    Mobile App (React Native)             │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐    │
+│  │   Search     │ │   Patterns   │ │  Research    │    │
+│  │   Screen     │ │   Screen     │ │  Screen      │    │
+│  └──────────────┘ └──────────────┘ └──────────────┘    │
+└─────────────────────────────────────────────────────────┘
+↓ API Calls
+┌─────────────────────────────────────────────────────────┐
+│                    Backend API (Express)                 │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │  Routes Layer                                     │  │
+│  │  ├─ Research Routes   ├─ Search Routes           │  │
+│  └───────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │  Services Layer                                   │  │
+│  │  ├─ SemanticSearcher ├─ PatternAnalyzer          │  │
+│  │  ├─ ChangeDetector   ├─ IntelligenceScorer       │  │
+│  │  ├─ RelevanceRanker  ├─ EmbeddingGenerator       │  │
+│  └───────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │  Middleware Layer                                 │  │
+│  │  ├─ Auth          ├─ Rate Limiting               │  │
+│  │  ├─ CORS          ├─ Error Handling              │  │
+│  └───────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
+↓                           ↓
+┌──────────┐            ┌─────────────────┐
+│ PostgreSQL           │  Redis Cache    │
+│ (Primary DB)         │  (Session Store)│
+└──────────┘            └─────────────────┘
+## Component Details
+
+### Mobile App
+- **Framework**: React Native with Expo
+- **State Management**: Context API + Hooks
+- **Navigation**: React Navigation
+- **HTTP Client**: Axios
+
+### Backend API
+- **Framework**: Express.js
+- **Language**: TypeScript
+- **Database**: PostgreSQL 15+
+- **Caching**: Redis
+- **Search**: Vector embeddings (pgvector)
+
+### Database Schema
+
+- `research` - Research queries
+- `research_content` - Indexed content with embeddings
+- `search_results` - Search history
+- `patterns` - Detected patterns
+- `changes` - Change tracking
+- `users` - User accounts
+
+### Key Services
+
+#### SemanticSearcher
+- Generates embeddings for queries
+- Searches using cosine similarity
+- Returns scored results
+
+#### PatternAnalyzer
+- Detects trends in data
+- Finds clusters of similar items
+- Identifies anomalies
+
+#### ChangeDetector
+- Compares current vs previous data
+- Tracks new/updated/removed items
+- Generates alerts
+
+#### IntelligenceScorer
+- Scores content quality
+- Weights by relevance, recency, quality
+- Calculates final intelligence score
+
+## Data Flow
+
+1. **Mobile Request** → API Endpoint
+2. **Authentication** → JWT Validation
+3. **Service Processing** → Business Logic
+4. **Database Query** → PostgreSQL
+5. **Response Generation** → JSON Result
+6. **Mobile Display** → Screen Rendering
+
+## Security
+
+- **Auth**: JWT + Passkeys
+- **Encryption**: HTTPS/TLS
+- **Rate Limiting**: 5 req/sec per IP
+- **Input Validation**: All endpoints validated
+- **Database**: Parameterized queries
+
+## Performance
+
+- **Search**: <200ms average
+- **Response Time**: <500ms P99
+- **Memory**: <80MB mobile, <200MB backend
+- **Throughput**: 1000+ req/sec
+
+## Scaling Strategy
+
+- **Horizontal**: Load balancer + multiple instances
+- **Vertical**: Larger instances for database
+- **Caching**: Redis for frequently accessed data
+- **CDN**: S3 + CloudFront for assets
+
+For more details, see individual component documentation.
