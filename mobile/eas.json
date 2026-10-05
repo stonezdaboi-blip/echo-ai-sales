@@ -1,0 +1,33 @@
+{
+  "cli": {
+    "version": ">= 5.0.0"
+  },
+  "build": {
+    "production": {
+      "node": "18.13.0",
+      "env": {
+        "EXPO_PUBLIC_ENV": "production"
+      }
+    },
+    "preview": {
+      "node": "18.13.0",
+      "env": {
+        "EXPO_PUBLIC_ENV": "preview"
+      }
+    },
+    "development": {
+      "node": "18.13.0",
+      "env": {
+        "EXPO_PUBLIC_ENV": "development"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccount": "path/to/service-account.json",
+        "track": "internal"
+      }
+    }
+  }
+}
