@@ -29,7 +29,7 @@
     "platforms": ["ios", "android"],
     "extra": {
       "eas": {
-        "projectId": "12238459-cdb6-4be6-af9f-51f672eb3b95",
+        "projectId": "dc135064-3f98-4f0c-afb8-7325be0e65ee",
         "owner": "stonez666s-team"
       }
     }
