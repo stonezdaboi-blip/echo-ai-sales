@@ -4,28 +4,18 @@
     "slug": "echo-ai-sale",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#1A1A2E"
-    },
-    "ios": {
-      "bundleIdentifier": "com.echo.ai.sales"
-    },
+    "platforms": ["ios", "android"],
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1A1A2E"
       },
       "package": "com.echo.ai.sales"
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
+    "ios": {
+      "bundleIdentifier": "com.echo.ai.sales"
     },
     "description": "ECHO Mobile App",
     "sdkVersion": "50.0.0",
-    "platforms": ["ios", "android"],
     "extra": {
       "eas": {
         "projectId": "3b4440a0-f5fa-45e1-921e-0c3e18bb001d"
