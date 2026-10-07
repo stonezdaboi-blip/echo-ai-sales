@@ -4,13 +4,22 @@
   },
   "build": {
     "production": {
-      "node": "18.13.0"
+      "node": "20.x",
+      "android": {
+        "buildType": "apk"
+      }
     },
     "preview": {
-      "node": "18.13.0"
+      "node": "20.x",
+      "android": {
+        "buildType": "apk"
+      }
     },
     "development": {
-      "node": "18.13.0"
+      "node": "20.x",
+      "android": {
+        "buildType": "apk"
+      }
     }
   }
 }
