@@ -9,7 +9,10 @@
       "adaptiveIcon": {
         "backgroundColor": "#1A1A2E"
       },
-      "package": "com.echo.ai.sales"
+      "package": "com.echo.ai.sales",
+      "compileSdkVersion": 34,
+      "targetSdkVersion": 34,
+      "minSdkVersion": 21
     },
     "description": "ECHO - Personal AI Synergy System",
     "extra": {
