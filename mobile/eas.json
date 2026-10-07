@@ -4,19 +4,19 @@
   },
   "build": {
     "production": {
-      "node": "20.10.0",
+      "node": "20.19.4",
       "android": {
         "buildType": "apk"
       }
     },
     "preview": {
-      "node": "20.10.0",
+      "node": "20.19.4",
       "android": {
         "buildType": "apk"
       }
     },
     "development": {
-      "node": "20.10.0",
+      "node": "20.19.4",
       "android": {
         "buildType": "apk"
       }
