@@ -54,6 +54,13 @@ jobs:
             fi
           fi
 
+      - name: Verify lockfile exists
+        run: |
+          if [ ! -f package-lock.json ]; then
+            echo "ERROR: backend/package-lock.json was not created."
+            exit 1
+          fi
+
       - name: Install dependencies
         run: npm ci
 
