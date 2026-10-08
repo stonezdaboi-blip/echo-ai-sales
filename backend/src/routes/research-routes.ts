@@ -141,6 +141,7 @@ export function createResearchRoutes(
         const startTime = Date.now();
 
         const results = await searcher.search(
+          queryId,
           query.trim(),
           10
         );
@@ -278,4 +279,4 @@ export function createResearchRoutes(
   );
 
   return router;
-            }
+      }
