@@ -1,120 +1,121 @@
-import express, { Express, Request, Response } from 'express';
+import express, { Express, Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { Pool } from 'pg';
 
-// Load environment variables
+import { createResearchRoutes } from './routes/research-routes';
+
 dotenv.config();
 
 const app: Express = express();
-const PORT = process.env.PORT || 3000;
 
-// Database connection
+const PORT = Number(process.env.PORT) || 3000;
+
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  console.warn('DATABASE_URL is not configured.');
+}
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: databaseUrl,
 });
 
-// Middleware
 app.use(cors());
-app.use(express.json());
 
-// Rate limiting
+app.use(express.json({ limit: '2mb' }));
+
 const limiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 5, // limit each IP to 5 requests per windowMs
-});
-app.use(limiter);
-
-// Health check endpoint
-app.get('/api/health', (req: Request, res: Response) => {
-  res.json({ status: 'OK', timestamp: new Date() });
+  windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 60 * 1000,
+  max: Number(process.env.RATE_LIMIT_MAX_REQUESTS) || 60,
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
-// Research endpoints
-app.post('/api/research', async (req: Request, res: Response) => {
+app.use('/api', limiter);
+
+/**
+ * Health check
+ */
+app.get('/api/health', async (_req: Request, res: Response) => {
   try {
-    const { query, prospects } = req.body;
-    
-    const result = await pool.query(
-      'INSERT INTO research (query, prospects, created_at) VALUES ($1, $2, NOW()) RETURNING *',
-      [query, JSON.stringify(prospects)]
-    );
-    
-    res.json(result.rows[0]);
+    await pool.query('SELECT 1');
+
+    res.json({
+      status: 'OK',
+      database: 'connected',
+      timestamp: new Date().toISOString(),
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create research' });
+    console.error('Health check failed:', error);
+
+    res.status(503).json({
+      status: 'ERROR',
+      database: 'disconnected',
+      timestamp: new Date().toISOString(),
+    });
   }
 });
 
-app.get('/api/research/:queryId', async (req: Request, res: Response) => {
-  try {
-    const { queryId } = req.params;
-    
-    const result = await pool.query(
-      'SELECT * FROM research WHERE id = $1',
-      [queryId]
-    );
-    
-    if (result.rows.length === 0) {
-      res.status(404).json({ error: 'Research not found' });
-      return;
-    }
-    
-    res.json(result.rows[0]);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch research' });
+/**
+ * Research API
+ *
+ * All research-related endpoints live in research-routes.ts.
+ */
+const openaiKey = process.env.OPENAI_API_KEY || '';
+
+app.use('/api', createResearchRoutes(pool, openaiKey));
+
+/**
+ * 404 handler
+ */
+app.use((_req: Request, res: Response) => {
+  res.status(404).json({
+    error: 'Not Found',
+    message: 'The requested endpoint does not exist.',
+  });
+});
+
+/**
+ * Global error handler
+ */
+app.use(
+  (
+    error: Error,
+    _req: Request,
+    res: Response,
+    _next: NextFunction
+  ) => {
+    console.error('Unhandled API error:', error);
+
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message:
+        process.env.NODE_ENV === 'production'
+          ? 'An unexpected error occurred.'
+          : error.message,
+    });
   }
-});
+);
 
-// Search endpoint
-app.post('/api/research/:queryId/search', async (req: Request, res: Response) => {
-  try {
-    const { queryId } = req.params;
-    const { query } = req.body;
-    
-    // Placeholder for semantic search logic
-    const results = {
-      queryId,
-      query,
-      results: [],
-      quality: 0.85,
-      responseTime: 152,
-    };
-    
-    res.json(results);
-  } catch (error) {
-    res.status(500).json({ error: 'Search failed' });
-  }
-});
+/**
+ * Graceful shutdown
+ */
+const shutdown = async () => {
+  console.log('Shutting down ECHO API...');
 
-// Pattern analysis endpoint
-app.get('/api/research/:queryId/patterns', async (req: Request, res: Response) => {
-  try {
-    const { queryId } = req.params;
-    
-    const patterns = {
-      trends: [],
-      clusters: [],
-      anomalies: [],
-    };
-    
-    res.json(patterns);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to analyze patterns' });
-  }
-});
+  await pool.end();
 
-// Error handling middleware
-app.use((err: any, req: Request, res: Response, next: Function) => {
-  console.error(err);
-  res.status(500).json({ error: 'Internal server error' });
-});
+  process.exit(0);
+};
 
-// Start server
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+
 app.listen(PORT, () => {
-  console.log(`🚀 Server listening on http://localhost:${PORT}`);
-  console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`ECHO API running on port ${PORT}`);
 });
 
+export { app, pool };
 export default app;
