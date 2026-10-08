@@ -1,4 +1,5 @@
--- Create users table
+-- ECHO 1.0 - Users and Collaboration Schema
+
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email VARCHAR(255) UNIQUE NOT NULL,
@@ -6,11 +7,13 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash VARCHAR(255),
   avatar_url TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_email (email)
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create user preferences table
+CREATE INDEX IF NOT EXISTS idx_users_email
+  ON users(email);
+
+
 CREATE TABLE IF NOT EXISTS user_preferences (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
@@ -22,18 +25,22 @@ CREATE TABLE IF NOT EXISTS user_preferences (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create user sessions table
+
 CREATE TABLE IF NOT EXISTS user_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   token VARCHAR(500) UNIQUE NOT NULL,
   expires_at TIMESTAMP NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_user_id (user_id),
-  INDEX idx_token (token)
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create research_collaborators table (for team features)
+CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id
+  ON user_sessions(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_user_sessions_token
+  ON user_sessions(token);
+
+
 CREATE TABLE IF NOT EXISTS research_collaborators (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   research_id UUID REFERENCES research(id) ON DELETE CASCADE,
@@ -43,3 +50,9 @@ CREATE TABLE IF NOT EXISTS research_collaborators (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(research_id, user_id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_research_collaborators_research_id
+  ON research_collaborators(research_id);
+
+CREATE INDEX IF NOT EXISTS idx_research_collaborators_user_id
+  ON research_collaborators(user_id);
