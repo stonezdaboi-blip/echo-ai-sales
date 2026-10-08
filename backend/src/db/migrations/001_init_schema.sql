@@ -1,17 +1,31 @@
--- Create research table
+-- ECHO 1.0 - Initial PostgreSQL Database Schema
+
+-- Required PostgreSQL extensions
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- =========================================================
+-- RESEARCH
+-- =========================================================
+
 CREATE TABLE IF NOT EXISTS research (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   query TEXT NOT NULL,
   prospects JSONB,
   status VARCHAR(50) DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_query (query),
-  INDEX idx_status (status)
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create research_content table with pgvector support
-CREATE EXTENSION IF NOT EXISTS vector;
+CREATE INDEX IF NOT EXISTS idx_research_query
+  ON research(query);
+
+CREATE INDEX IF NOT EXISTS idx_research_status
+  ON research(status);
+
+-- =========================================================
+-- RESEARCH CONTENT
+-- =========================================================
 
 CREATE TABLE IF NOT EXISTS research_content (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -21,12 +35,24 @@ CREATE TABLE IF NOT EXISTS research_content (
   source VARCHAR(255),
   metadata JSONB,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_query_id (query_id),
-  INDEX idx_source (source)
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create search_results table
+CREATE INDEX IF NOT EXISTS idx_research_content_query_id
+  ON research_content(query_id);
+
+CREATE INDEX IF NOT EXISTS idx_research_content_source
+  ON research_content(source);
+
+-- Vector similarity index
+CREATE INDEX IF NOT EXISTS idx_research_content_embedding
+  ON research_content
+  USING ivfflat (embedding vector_cosine_ops);
+
+-- =========================================================
+-- SEARCH RESULTS
+-- =========================================================
+
 CREATE TABLE IF NOT EXISTS search_results (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   research_id UUID REFERENCES research(id) ON DELETE CASCADE,
@@ -37,16 +63,13 @@ CREATE TABLE IF NOT EXISTS search_results (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create patterns table
-CREATE TABLE IF NOT EXISTS patterns (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  research_id UUID REFERENCES research(id) ON DELETE CASCADE,
-  pattern_type VARCHAR(50),
-  name TEXT,
-  strength DECIMAL(3,2),
-  items JSONB,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+CREATE INDEX IF NOT EXISTS idx_search_results_research_id
+  ON search_results(research_id);
 
--- Create indexes for performance
-CREATE INDEX IF NOT EXISTS idx_research_content_embedding ON research_content USING ivfflat (embedding vector_cosine_ops);
+-- =========================================================
+-- PATTERNS
+-- =========================================================
+-- The complete patterns structure is handled by
+-- 002_create_patterns_schema.sql.
+-- It is intentionally NOT created here to avoid
+-- conflicting definitions across migrations.
