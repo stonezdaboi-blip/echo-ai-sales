@@ -1,4 +1,5 @@
--- Create patterns table
+-- ECHO 1.0 - Patterns, Changes, Snapshots and Alerts
+
 CREATE TABLE IF NOT EXISTS patterns (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   research_id UUID REFERENCES research(id) ON DELETE CASCADE,
@@ -8,12 +9,16 @@ CREATE TABLE IF NOT EXISTS patterns (
   description TEXT,
   items JSONB,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_research_id (research_id),
-  INDEX idx_pattern_type (pattern_type)
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create changes tracking table
+CREATE INDEX IF NOT EXISTS idx_patterns_research_id
+  ON patterns(research_id);
+
+CREATE INDEX IF NOT EXISTS idx_patterns_pattern_type
+  ON patterns(pattern_type);
+
+
 CREATE TABLE IF NOT EXISTS changes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   query_id UUID REFERENCES research(id) ON DELETE CASCADE,
@@ -22,21 +27,27 @@ CREATE TABLE IF NOT EXISTS changes (
   description TEXT,
   severity VARCHAR(20),
   data JSONB,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_query_id (query_id),
-  INDEX idx_type (type)
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create research snapshots table
+CREATE INDEX IF NOT EXISTS idx_changes_query_id
+  ON changes(query_id);
+
+CREATE INDEX IF NOT EXISTS idx_changes_type
+  ON changes(type);
+
+
 CREATE TABLE IF NOT EXISTS research_snapshots (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   query_id UUID REFERENCES research(id) ON DELETE CASCADE,
   data JSONB NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_query_id (query_id)
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create alerts table
+CREATE INDEX IF NOT EXISTS idx_research_snapshots_query_id
+  ON research_snapshots(query_id);
+
+
 CREATE TABLE IF NOT EXISTS alerts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   research_id UUID REFERENCES research(id) ON DELETE CASCADE,
@@ -45,7 +56,11 @@ CREATE TABLE IF NOT EXISTS alerts (
   description TEXT,
   severity VARCHAR(20),
   read BOOLEAN DEFAULT false,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_research_id (research_id),
-  INDEX idx_alert_type (alert_type)
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS idx_alerts_research_id
+  ON alerts(research_id);
+
+CREATE INDEX IF NOT EXISTS idx_alerts_alert_type
+  ON alerts(alert_type);
