@@ -11,6 +11,14 @@
       },
       "package": "com.echo.ai.sales"
     },
+    "plugins": [
+  [
+    "expo-splash-screen",
+    {
+      "backgroundColor": "#1A1A2E"
+    }
+  ]
+],
     "description": "ECHO - Personal AI Synergy System",
     "extra": {
       "eas": {
