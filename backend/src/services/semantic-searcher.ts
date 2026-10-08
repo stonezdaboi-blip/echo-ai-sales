@@ -17,9 +17,14 @@ export class SemanticSearcher {
   ) {}
 
   async search(
+    queryId: string,
     query: string,
     limit = 10
   ): Promise<SemanticSearchResult[]> {
+    if (!queryId) {
+      throw new Error('queryId is required.');
+    }
+
     if (!query.trim()) {
       return [];
     }
@@ -38,12 +43,17 @@ export class SemanticSearcher {
         source,
         1 - (embedding <=> $1::vector) AS similarity
       FROM research_content
-      WHERE embedding IS NOT NULL
+      WHERE query_id = $2
+        AND embedding IS NOT NULL
         AND 1 - (embedding <=> $1::vector) > 0.7
       ORDER BY similarity DESC
-      LIMIT $2
+      LIMIT $3
       `,
-      [JSON.stringify(queryEmbedding), limit]
+      [
+        JSON.stringify(queryEmbedding),
+        queryId,
+        limit,
+      ]
     );
 
     return result.rows.map((row) => {
@@ -54,13 +64,20 @@ export class SemanticSearcher {
         content: row.content,
         source: row.source,
         similarity,
-        relevance: Math.max(0, Math.min(1, similarity)),
-        confidence: this.calculateConfidence(similarity),
+        relevance: Math.max(
+          0,
+          Math.min(1, similarity)
+        ),
+        confidence: this.calculateConfidence(
+          similarity
+        ),
       };
     });
   }
 
-  private async generateEmbedding(text: string): Promise<number[]> {
+  private async generateEmbedding(
+    text: string
+  ): Promise<number[]> {
     const response = await axios.post(
       'https://api.openai.com/v1/embeddings',
       {
@@ -76,16 +93,21 @@ export class SemanticSearcher {
       }
     );
 
-    const embedding = response.data?.data?.[0]?.embedding;
+    const embedding =
+      response.data?.data?.[0]?.embedding;
 
     if (!Array.isArray(embedding)) {
-      throw new Error('OpenAI returned an invalid embedding.');
+      throw new Error(
+        'OpenAI returned an invalid embedding.'
+      );
     }
 
     return embedding;
   }
 
-  private calculateConfidence(similarity: number): number {
+  private calculateConfidence(
+    similarity: number
+  ): number {
     if (similarity >= 0.9) {
       return 0.95;
     }
@@ -100,4 +122,4 @@ export class SemanticSearcher {
 
     return 0.5;
   }
-      }
+}
