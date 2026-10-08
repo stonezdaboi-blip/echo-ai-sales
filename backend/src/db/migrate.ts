@@ -20,12 +20,10 @@ function getMigrationsDirectory(): string {
     __dirname,
     'migrations'
   );
-
-  const builtMigrations = path.resolve(
-    __dirname,
-    '../src/db/migrations'
-  );
-
+const builtMigrations = path.resolve(
+  __dirname,
+  '../../src/db/migrations'
+);
   if (fs.existsSync(sourceMigrations)) {
     return sourceMigrations;
   }
