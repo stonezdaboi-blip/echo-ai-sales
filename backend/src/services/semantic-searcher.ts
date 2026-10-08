@@ -1,87 +1,103 @@
 import axios from 'axios';
 import { Pool } from 'pg';
 
-export interface SearchResult {
+export interface SemanticSearchResult {
   id: string;
   content: string;
+  source: string | null;
   similarity: number;
   relevance: number;
   confidence: number;
-  source: string;
 }
 
 export class SemanticSearcher {
-  constructor(private db: Pool, private openaiKey: string) {}
+  constructor(
+    private readonly db: Pool,
+    private readonly openaiKey: string
+  ) {}
 
-  async search(query: string, limit: number = 10): Promise<SearchResult[]> {
-    try {
-      // Generate embedding for query
-      const queryEmbedding = await this.generateEmbedding(query);
+  async search(
+    query: string,
+    limit = 10
+  ): Promise<SemanticSearchResult[]> {
+    if (!query.trim()) {
+      return [];
+    }
 
-      // Search similar vectors in database
-      const results = await this.db.query(
-        `SELECT 
-          id, 
-          content, 
-          source,
-          1 - (embedding <=> $1::vector) as similarity
-         FROM research_content
-         WHERE 1 - (embedding <=> $1::vector) > 0.7
-         ORDER BY similarity DESC
-         LIMIT $2`,
-        [queryEmbedding, limit]
-      );
+    if (!this.openaiKey) {
+      throw new Error('OPENAI_API_KEY is not configured.');
+    }
 
-      // Rank by relevance
-      return results.rows.map((row: any) => ({
+    const queryEmbedding = await this.generateEmbedding(query);
+
+    const result = await this.db.query(
+      `
+      SELECT
+        id,
+        content,
+        source,
+        1 - (embedding <=> $1::vector) AS similarity
+      FROM research_content
+      WHERE embedding IS NOT NULL
+        AND 1 - (embedding <=> $1::vector) > 0.7
+      ORDER BY similarity DESC
+      LIMIT $2
+      `,
+      [JSON.stringify(queryEmbedding), limit]
+    );
+
+    return result.rows.map((row) => {
+      const similarity = Number(row.similarity);
+
+      return {
         id: row.id,
         content: row.content,
-        similarity: row.similarity,
-        relevance: this.calculateRelevance(query, row.content),
-        confidence: this.calculateConfidence(row.similarity),
         source: row.source,
-      }));
-    } catch (error) {
-      console.error('Search error:', error);
-      throw new Error('Semantic search failed');
-    }
+        similarity,
+        relevance: Math.max(0, Math.min(1, similarity)),
+        confidence: this.calculateConfidence(similarity),
+      };
+    });
   }
 
   private async generateEmbedding(text: string): Promise<number[]> {
-    try {
-      const response = await axios.post(
-        'https://api.openai.com/v1/embeddings',
-        {
-          input: text,
-          model: 'text-embedding-3-small',
+    const response = await axios.post(
+      'https://api.openai.com/v1/embeddings',
+      {
+        input: text,
+        model: 'text-embedding-3-small',
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${this.openaiKey}`,
+          'Content-Type': 'application/json',
         },
-        {
-          headers: {
-            'Authorization': `Bearer ${this.openaiKey}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+        timeout: 30000,
+      }
+    );
 
-      return response.data.data[0].embedding;
-    } catch (error) {
-      console.error('Embedding generation error:', error);
-      throw new Error('Failed to generate embedding');
+    const embedding = response.data?.data?.[0]?.embedding;
+
+    if (!Array.isArray(embedding)) {
+      throw new Error('OpenAI returned an invalid embedding.');
     }
-  }
 
-  private calculateRelevance(query: string, content: string): number {
-    const queryWords = query.toLowerCase().split(' ');
-    const contentLower = content.toLowerCase();
-    const matches = queryWords.filter(word => contentLower.includes(word)).length;
-    return Math.min(1, matches / queryWords.length);
+    return embedding;
   }
 
   private calculateConfidence(similarity: number): number {
-    // Convert similarity score to confidence percentage
-    if (similarity > 0.85) return 0.95;
-    if (similarity > 0.75) return 0.85;
-    if (similarity > 0.7) return 0.70;
+    if (similarity >= 0.9) {
+      return 0.95;
+    }
+
+    if (similarity >= 0.8) {
+      return 0.85;
+    }
+
+    if (similarity >= 0.7) {
+      return 0.75;
+    }
+
     return 0.5;
   }
-        }
+      }
