@@ -78,7 +78,7 @@ export function createResearchRoutes(
     '/research/:queryId',
     async (req: Request, res: Response) => {
       try {
-        const { queryId } = req.params;
+        const queryId = String(req.params.queryId);
 
         const result = await db.query(
           `
@@ -112,7 +112,7 @@ export function createResearchRoutes(
     '/research/:queryId/search',
     async (req: Request, res: Response) => {
       try {
-        const { queryId } = req.params;
+        const queryId = String(req.params.queryId);
         const { query } = req.body;
 
         if (!query || typeof query !== 'string' || !query.trim()) {
@@ -170,7 +170,7 @@ export function createResearchRoutes(
     '/research/:queryId/patterns',
     async (req: Request, res: Response) => {
       try {
-        const { queryId } = req.params;
+        const queryId = String(req.params.queryId);
 
         const research = await db.query(
           `
@@ -188,9 +188,7 @@ export function createResearchRoutes(
           return;
         }
 
-        const patterns = await analyzer.analyzePatterns(
-          queryId
-        );
+        const patterns = await analyzer.analyzePatterns(queryId);
 
         res.json(patterns);
       } catch (error) {
@@ -208,7 +206,7 @@ export function createResearchRoutes(
     '/research/:queryId/alerts',
     async (req: Request, res: Response) => {
       try {
-        const { queryId } = req.params;
+        const queryId = String(req.params.queryId);
 
         const result = await db.query(
           `
@@ -238,7 +236,7 @@ export function createResearchRoutes(
     '/research/:queryId',
     async (req: Request, res: Response) => {
       try {
-        const { queryId } = req.params;
+        const queryId = String(req.params.queryId);
         const { status } = req.body;
 
         if (!status || typeof status !== 'string') {
@@ -279,4 +277,4 @@ export function createResearchRoutes(
   );
 
   return router;
-      }
+    }
