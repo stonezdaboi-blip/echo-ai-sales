@@ -1,14 +1,11 @@
+
 name: Security
 
 on:
   push:
-    branches:
-      - main
-      - develop
+    branches: [main, develop]
   pull_request:
-    branches:
-      - main
-      - develop
+    branches: [main, develop]
   schedule:
     - cron: '0 0 * * 0'
 
@@ -24,12 +21,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: Run Snyk Security Scan
+        if: ${{ secrets.SNYK_TOKEN != '' }}
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --severity-threshold=high
+
+      - name: Report missing Snyk credentials
+        if: ${{ secrets.SNYK_TOKEN == '' }}
+        run: |
+          echo "::warning::SNYK_TOKEN is not configured. Snyk scan was skipped."
 
       - name: Run Trivy Vulnerability Scan
         uses: aquasecurity/trivy-action@master
@@ -39,12 +47,18 @@ jobs:
           format: sarif
           output: trivy-results.sarif
           severity: HIGH,CRITICAL
+          exit-code: '0'
 
       - name: Upload Trivy results
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        if: always() && hashFiles('trivy-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-results.sarif
+
+      - name: Warn if Trivy report is missing
+        if: always() && hashFiles('trivy-results.sarif') == ''
+        run: |
+          echo "::warning::Trivy did not produce a SARIF report. Check the scan step."
 
   dependency-check:
     runs-on: ubuntu-latest
@@ -52,9 +66,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project:
-          - backend
-          - mobile
+        project: [backend, mobile]
 
     steps:
       - name: Checkout repository
@@ -69,7 +81,7 @@ jobs:
         working-directory: ./${{ matrix.project }}
         run: |
           if [ ! -f package-lock.json ]; then
-            echo "ERROR: ${{ matrix.project }}/package-lock.json is missing."
+            echo "::error::${{ matrix.project }}/package-lock.json is missing."
             exit 1
           fi
 
@@ -80,3 +92,4 @@ jobs:
       - name: Audit dependencies
         working-directory: ./${{ matrix.project }}
         run: npm audit --audit-level=moderate
+        
