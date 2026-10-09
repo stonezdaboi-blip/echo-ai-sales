@@ -32,33 +32,21 @@ jobs:
         with:
           node-version: 20
 
-      - name: Generate lockfile if missing
-        run: |
-          if [ ! -f package-lock.json ]; then
-            npm install --package-lock-only
-          fi
+      - name: Generate / update lockfile
+        run: npm install
 
-      - name: Commit generated lockfile
+      - name: Commit lockfile if changed
         if: github.event_name == 'push'
         working-directory: .
         run: |
-          if [ -f backend/package-lock.json ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-            git add backend/package-lock.json
+          git add backend/package-lock.json
 
-            if ! git diff --cached --quiet; then
-              git commit -m "chore: add backend package lockfile"
-              git push
-            fi
-          fi
-
-      - name: Verify lockfile exists
-        run: |
-          if [ ! -f package-lock.json ]; then
-            echo "ERROR: backend/package-lock.json was not created."
-            exit 1
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update backend package-lock.json"
+            git push
           fi
 
       - name: Install dependencies
