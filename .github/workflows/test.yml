@@ -1,52 +1,44 @@
+
 name: Tests
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, master, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, master, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  test:
+  test-backend:
+    name: Backend Tests
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: echo_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
+    defaults:
+      run:
+        working-directory: backend
 
     steps:
-    - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-    - name: Install backend dependencies
-      working-directory: ./backend
-      run: npm ci
+      - name: Verify backend lockfile
+        run: |
+          if [ ! -f package-lock.json ]; then
+            echo "::error::backend/package-lock.json is missing."
+            exit 1
+          fi
 
-    - name: Run backend tests
-      working-directory: ./backend
-      env:
-        DATABASE_URL: postgres://postgres:postgres@localhost:5432/echo_test
-        NODE_ENV: test
-      run: npm test
+      - name: Install backend dependencies
+        run: npm ci
 
-    - name: Upload coverage
-      uses: codecov/codecov-action@v3
-      with:
-        files: ./backend/coverage/coverage-final.json
-        flags: unittests
-        name: codecov-umbrella
+      - name: Run backend tests
+        run: npm test -- --runInBand
+        
