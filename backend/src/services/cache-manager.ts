@@ -1,11 +1,14 @@
-import redis, { Redis } from 'redis';
+import { createClient, RedisClientType } from 'redis';
 
 export class CacheManager {
-  private client: Redis;
+  private client: RedisClientType;
 
   constructor(redisUrl: string) {
-    this.client = redis.createClient({ url: redisUrl });
-    this.client.on('error', err => console.error('Redis Error:', err));
+    this.client = createClient({ url: redisUrl });
+
+    this.client.on('error', (err: Error) => {
+      console.error('Redis Error:', err);
+    });
   }
 
   async connect(): Promise<void> {
