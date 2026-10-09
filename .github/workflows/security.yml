@@ -1,4 +1,3 @@
-
 name: Security
 
 on:
@@ -26,8 +25,17 @@ jobs:
         with:
           node-version: 20
 
+      - name: Check if SNYK_TOKEN is available
+        id: snyk-check
+        run: |
+          if [ -n "${{ secrets.SNYK_TOKEN }}" ]; then
+            echo "available=true" >> $GITHUB_OUTPUT
+          else
+            echo "available=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Run Snyk Security Scan
-        if: ${{ secrets.SNYK_TOKEN != '' }}
+        if: steps.snyk-check.outputs.available == 'true'
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -35,7 +43,7 @@ jobs:
           args: --severity-threshold=high
 
       - name: Report missing Snyk credentials
-        if: ${{ secrets.SNYK_TOKEN == '' }}
+        if: steps.snyk-check.outputs.available == 'false'
         run: |
           echo "::warning::SNYK_TOKEN is not configured. Snyk scan was skipped."
 
@@ -92,4 +100,3 @@ jobs:
       - name: Audit dependencies
         working-directory: ./${{ matrix.project }}
         run: npm audit --audit-level=moderate
-        
