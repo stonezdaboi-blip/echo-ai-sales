@@ -44,12 +44,11 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-        cache: 'npm'
-        cache-dependency-path: mobile/package-lock.json
+        # cache disabled for now because mobile/package-lock.json is missing
 
     - name: Install dependencies
       working-directory: ./mobile
-      run: npm ci
+      run: npm install
 
     - name: Build for web
       working-directory: ./mobile
