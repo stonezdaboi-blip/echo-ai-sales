@@ -1,43 +1,62 @@
-name: Deploy
+name: ECHO Backend Release
 
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
-  deploy:
+  verify-backend:
+    name: Verify Backend
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verify package files
+        run: |
+          test -f package.json
+          test -f package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build backend
+        run: npm run build
+
+      - name: Run backend tests
+        run: npm test -- --runInBand
+
+      - name: Verify compiled entry point
+        run: test -f dist/index.js
+
+  create-release:
+    name: Create GitHub Release
+    needs: verify-backend
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-
-    - name: Build Backend
-      working-directory: ./backend
-      run: |
-        npm ci
-        npm run build
-
-    - name: Deploy Backend to AWS
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      run: |
-        echo "Deploying to AWS..."
-        # Add deployment commands here
-
-    - name: Create Release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        body: Production release
-        draft: false
-        prerelease: false
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "ECHO ${GITHUB_REF_NAME}" \
+            --notes "Backend build and tests passed."
