@@ -9,6 +9,9 @@ import {
 } from 'react-native';
 import axios from 'axios';
 
+// Correct backend URL
+const API_URL = 'https://echo-ai-sales-1.onrender.com';
+
 interface Pattern {
   id: string;
   type: 'trend' | 'cluster' | 'anomaly';
@@ -36,16 +39,21 @@ export default function PatternsScreen({ route }: any) {
   const [selectedType, setSelectedType] = useState<'trends' | 'clusters' | 'anomalies'>('trends');
 
   useEffect(() => {
-    fetchPatterns();
+    if (queryId) {
+      fetchPatterns();
+    } else {
+      setLoading(false);
+    }
   }, [queryId]);
 
   const fetchPatterns = async () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `http://localhost:3000/api/research/${queryId}/patterns`
+        `\( {API_URL}/api/research/ \){queryId}/patterns`,
+        { timeout: 15000 }
       );
-      setPatterns(response.data);
+      setPatterns(response.data || { trends: [], clusters: [], anomalies: [] });
     } catch (error) {
       console.error('Failed to fetch patterns:', error);
     } finally {
@@ -80,7 +88,10 @@ export default function PatternsScreen({ route }: any) {
   };
 
   const renderPatternItem = (pattern: Pattern) => (
-    <View key={pattern.id} style={[styles.patternCard, { borderLeftColor: getColorByType(pattern.type) }]}>
+    <View
+      key={pattern.id}
+      style={[styles.patternCard, { borderLeftColor: getColorByType(pattern.type) }]}
+    >
       <View style={styles.patternHeader}>
         <Text style={styles.patternIcon}>{getPatternIcon(pattern.type)}</Text>
         <View style={styles.patternTitleContainer}>
@@ -103,12 +114,16 @@ export default function PatternsScreen({ route }: any) {
               ]}
             />
           </View>
-          <Text style={styles.metricValue}>{(pattern.strength * 100).toFixed(0)}%</Text>
+          <Text style={styles.metricValue}>
+            {(pattern.strength * 100).toFixed(0)}%
+          </Text>
         </View>
 
         <View style={styles.metricItem}>
           <Text style={styles.metricLabel}>Confidence</Text>
-          <Text style={styles.confidenceValue}>{(pattern.confidence * 100).toFixed(0)}%</Text>
+          <Text style={styles.confidenceValue}>
+            {(pattern.confidence * 100).toFixed(0)}%
+          </Text>
         </View>
 
         <View style={styles.metricItem}>
@@ -141,7 +156,12 @@ export default function PatternsScreen({ route }: any) {
           style={[styles.tab, selectedType === 'trends' && styles.activeTab]}
           onPress={() => setSelectedType('trends')}
         >
-          <Text style={[styles.tabText, selectedType === 'trends' && styles.activeTabText]}>
+          <Text
+            style={[
+              styles.tabText,
+              selectedType === 'trends' && styles.activeTabText,
+            ]}
+          >
             📈 Trends ({patterns.trends.length})
           </Text>
         </TouchableOpacity>
@@ -150,7 +170,12 @@ export default function PatternsScreen({ route }: any) {
           style={[styles.tab, selectedType === 'clusters' && styles.activeTab]}
           onPress={() => setSelectedType('clusters')}
         >
-          <Text style={[styles.tabText, selectedType === 'clusters' && styles.activeTabText]}>
+          <Text
+            style={[
+              styles.tabText,
+              selectedType === 'clusters' && styles.activeTabText,
+            ]}
+          >
             🔗 Clusters ({patterns.clusters.length})
           </Text>
         </TouchableOpacity>
@@ -159,13 +184,21 @@ export default function PatternsScreen({ route }: any) {
           style={[styles.tab, selectedType === 'anomalies' && styles.activeTab]}
           onPress={() => setSelectedType('anomalies')}
         >
-          <Text style={[styles.tabText, selectedType === 'anomalies' && styles.activeTabText]}>
+          <Text
+            style={[
+              styles.tabText,
+              selectedType === 'anomalies' && styles.activeTabText,
+            ]}
+          >
             ⚠️ Anomalies ({patterns.anomalies.length})
           </Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.patternsContainer} contentContainerStyle={styles.patternsContent}>
+      <ScrollView
+        style={styles.patternsContainer}
+        contentContainerStyle={styles.patternsContent}
+      >
         {selectedPatterns.length > 0 ? (
           selectedPatterns.map(renderPatternItem)
         ) : (
