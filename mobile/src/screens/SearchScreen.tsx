@@ -7,9 +7,14 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
-  ScrollView,
 } from 'react-native';
 import axios from 'axios';
+
+// Use the same base URL strategy as api.ts
+const API_BASE_URL = (
+  process.env.EXPO_PUBLIC_API_URL ||
+  'https://echo-ai-sales-1.onrender.com/api'
+).replace(/\/+$/, '');
 
 interface SearchResultItem {
   id: string;
@@ -31,9 +36,11 @@ export default function SearchScreen() {
 
     try {
       setLoading(true);
+
       const response = await axios.post(
-        'http://localhost:3000/api/search',
+        `${API_BASE_URL}/search`,
         { query },
+        { timeout: 30000 }
       );
 
       setResults(response.data.results || []);
@@ -41,9 +48,12 @@ export default function SearchScreen() {
         quality: response.data.quality || 0,
         responseTime: response.data.responseTime || 0,
       });
-    } catch (error) {
-      console.error('Search error:', error);
-      alert('Search failed. Try again.');
+    } catch (error: any) {
+      console.error('Search error:', error?.response?.data || error.message);
+      alert(
+        error?.response?.data?.message ||
+          'Search failed. Please check your connection and try again.'
+      );
     } finally {
       setLoading(false);
     }
@@ -122,7 +132,9 @@ export default function SearchScreen() {
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <Text style={styles.statLabel}>Quality Score</Text>
-              <Text style={styles.statValue}>{(stats.quality * 100).toFixed(0)}%</Text>
+              <Text style={styles.statValue}>
+                {(stats.quality * 100).toFixed(0)}%
+              </Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statLabel}>Response Time</Text>
@@ -142,7 +154,6 @@ export default function SearchScreen() {
           renderItem={renderResultItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.resultsList}
-          scrollEnabled={true}
         />
       ) : !loading && query ? (
         <View style={styles.emptyContainer}>
