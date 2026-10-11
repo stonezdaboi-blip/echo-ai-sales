@@ -4,9 +4,10 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as SplashScreen from 'expo-splash-screen';
 
-// Real screens
 import SearchScreen from './src/screens/SearchScreen';
 import ResearchListScreen from './src/screens/ResearchListScreen';
+import ResearchDetailScreen from './src/screens/ResearchDetailScreen';
+import PatternsScreen from './src/screens/PatternsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -48,7 +49,6 @@ export default function App() {
     const timer = setTimeout(async () => {
       await SplashScreen.hideAsync();
     }, 800);
-
     return () => clearTimeout(timer);
   }, []);
 
@@ -63,29 +63,12 @@ export default function App() {
           contentStyle: { backgroundColor: '#0F0F1E' },
         }}
       >
-        <Stack.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{ title: 'ECHO' }}
-        />
-
-        <Stack.Screen
-          name="Search"
-          component={SearchScreen}
-          options={{ title: 'Search' }}
-        />
-
-        <Stack.Screen
-          name="Research"
-          component={ResearchListScreen}
-          options={{ title: 'Research Projects' }}
-        />
-
-        <Stack.Screen
-          name="Settings"
-          component={SettingsScreen}
-          options={{ title: 'Settings' }}
-        />
+        <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'ECHO' }} />
+        <Stack.Screen name="Search" component={SearchScreen} options={{ title: 'Search' }} />
+        <Stack.Screen name="Research" component={ResearchListScreen} options={{ title: 'Research Projects' }} />
+        <Stack.Screen name="ResearchDetail" component={ResearchDetailScreen} options={{ title: 'Research Detail' }} />
+        <Stack.Screen name="Patterns" component={PatternsScreen} options={{ title: 'Patterns' }} />
+        <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
