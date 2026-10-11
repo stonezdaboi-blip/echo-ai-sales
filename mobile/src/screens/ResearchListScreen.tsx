@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
@@ -11,16 +10,18 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 
+const API_URL = 'https://echo-ai-sales.onrender.com';
+
 interface Research {
   id: string;
   query: string;
   status: string;
   created_at: string;
-  results_count: number;
+  results_count?: number;
 }
 
 export default function ResearchListScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const [researches, setResearches] = useState<Research[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,19 +33,20 @@ export default function ResearchListScreen() {
   const fetchResearches = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:3000/api/researches');
-      setResearches(response.data);
       setError(null);
+
+      const response = await axios.get(`${API_URL}/api/researches`);
+      setResearches(response.data || []);
     } catch (err) {
-      setError('Failed to load researches');
       console.error(err);
+      setError('Failed to load researches. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleResearchPress = (research: Research) => {
-    navigation.navigate('ResearchDetail', { 
+    navigation.navigate('ResearchDetail', {
       queryId: research.id,
       query: research.query,
     });
@@ -66,10 +68,10 @@ export default function ResearchListScreen() {
 
       <View style={styles.cardFooter}>
         <Text style={styles.metaText}>
-          {item.results_count} results
+          {item.results_count ?? 0} results
         </Text>
         <Text style={styles.metaText}>
-          {new Date(item.created_at).toLocaleDateString()}
+          {item.created_at ? new Date(item.created_at).toLocaleDateString() : ''}
         </Text>
       </View>
     </TouchableOpacity>
@@ -98,10 +100,13 @@ export default function ResearchListScreen() {
       {error && (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity onPress={fetchResearches} style={{ marginTop: 8 }}>
+            <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>Tap to retry</Text>
+          </TouchableOpacity>
         </View>
       )}
 
-      {researches.length === 0 ? (
+      {researches.length === 0 && !error ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>No research projects yet</Text>
           <Text style={styles.emptySubText}>Start a new research to get insights</Text>
@@ -112,7 +117,6 @@ export default function ResearchListScreen() {
           renderItem={renderResearchItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
-          scrollEnabled={false}
         />
       )}
     </View>
