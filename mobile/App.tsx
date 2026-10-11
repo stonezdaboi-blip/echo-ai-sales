@@ -4,23 +4,14 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as SplashScreen from 'expo-splash-screen';
 
-// Import your real screens
-import SearchScreen from './src/SearchScreen'; // adjust path if needed
+// Real screens
+import SearchScreen from './src/screens/SearchScreen';
+import ResearchListScreen from './src/screens/ResearchListScreen';
+import SettingsScreen from './src/screens/SettingsScreen';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const Stack = createNativeStackNavigator();
-
-function PlaceholderScreen({ title }: { title: string }) {
-  return (
-    <View style={styles.placeholder}>
-      <Text style={styles.placeholderTitle}>{title}</Text>
-      <Text style={styles.placeholderText}>
-        This ECHO module is ready for development.
-      </Text>
-    </View>
-  );
-}
 
 function HomeScreen({ navigation }: any) {
   return (
@@ -84,13 +75,17 @@ export default function App() {
           options={{ title: 'Search' }}
         />
 
-        <Stack.Screen name="Research">
-          {() => <PlaceholderScreen title="Research Projects" />}
-        </Stack.Screen>
+        <Stack.Screen
+          name="Research"
+          component={ResearchListScreen}
+          options={{ title: 'Research Projects' }}
+        />
 
-        <Stack.Screen name="Settings">
-          {() => <PlaceholderScreen title="Settings" />}
-        </Stack.Screen>
+        <Stack.Screen
+          name="Settings"
+          component={SettingsScreen}
+          options={{ title: 'Settings' }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -128,23 +123,5 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontWeight: 'bold',
     fontSize: 16,
-  },
-  placeholder: {
-    flex: 1,
-    backgroundColor: '#0F0F1E',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  placeholderTitle: {
-    color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  placeholderText: {
-    color: '#888888',
-    fontSize: 15,
-    textAlign: 'center',
   },
 });
