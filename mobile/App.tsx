@@ -4,6 +4,9 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as SplashScreen from 'expo-splash-screen';
 
+// Import your real screens
+import SearchScreen from './src/SearchScreen'; // adjust path if needed
+
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const Stack = createNativeStackNavigator();
@@ -27,9 +30,16 @@ function HomeScreen({ navigation }: any) {
 
       <TouchableOpacity
         style={styles.button}
+        onPress={() => navigation.navigate('Search')}
+      >
+        <Text style={styles.buttonText}>Search</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.button}
         onPress={() => navigation.navigate('Research')}
       >
-        <Text style={styles.buttonText}>Go to Research</Text>
+        <Text style={styles.buttonText}>Research Projects</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -47,6 +57,7 @@ export default function App() {
     const timer = setTimeout(async () => {
       await SplashScreen.hideAsync();
     }, 800);
+
     return () => clearTimeout(timer);
   }, []);
 
@@ -66,9 +77,17 @@ export default function App() {
           component={HomeScreen}
           options={{ title: 'ECHO' }}
         />
+
+        <Stack.Screen
+          name="Search"
+          component={SearchScreen}
+          options={{ title: 'Search' }}
+        />
+
         <Stack.Screen name="Research">
           {() => <PlaceholderScreen title="Research Projects" />}
         </Stack.Screen>
+
         <Stack.Screen name="Settings">
           {() => <PlaceholderScreen title="Settings" />}
         </Stack.Screen>
