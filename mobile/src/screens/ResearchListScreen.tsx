@@ -10,7 +10,8 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 
-const API_URL = 'https://echo-ai-sales.onrender.com';
+// Correct backend URL
+const API_URL = 'https://echo-ai-sales-1.onrender.com';
 
 interface Research {
   id: string;
@@ -35,7 +36,10 @@ export default function ResearchListScreen() {
       setLoading(true);
       setError(null);
 
-      const response = await axios.get(`${API_URL}/api/researches`);
+      const response = await axios.get(`${API_URL}/api/researches`, {
+        timeout: 15000,
+      });
+
       setResearches(response.data || []);
     } catch (err) {
       console.error(err);
@@ -61,7 +65,12 @@ export default function ResearchListScreen() {
         <Text style={styles.queryText} numberOfLines={2}>
           {item.query}
         </Text>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+        <View
+          style={[
+            styles.statusBadge,
+            { backgroundColor: getStatusColor(item.status) },
+          ]}
+        >
           <Text style={styles.statusText}>{item.status}</Text>
         </View>
       </View>
@@ -71,7 +80,9 @@ export default function ResearchListScreen() {
           {item.results_count ?? 0} results
         </Text>
         <Text style={styles.metaText}>
-          {item.created_at ? new Date(item.created_at).toLocaleDateString() : ''}
+          {item.created_at
+            ? new Date(item.created_at).toLocaleDateString()
+            : ''}
         </Text>
       </View>
     </TouchableOpacity>
@@ -101,7 +112,9 @@ export default function ResearchListScreen() {
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity onPress={fetchResearches} style={{ marginTop: 8 }}>
-            <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>Tap to retry</Text>
+            <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>
+              Tap to retry
+            </Text>
           </TouchableOpacity>
         </View>
       )}
@@ -109,7 +122,9 @@ export default function ResearchListScreen() {
       {researches.length === 0 && !error ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>No research projects yet</Text>
-          <Text style={styles.emptySubText}>Start a new research to get insights</Text>
+          <Text style={styles.emptySubText}>
+            Start a new research to get insights
+          </Text>
         </View>
       ) : (
         <FlatList
