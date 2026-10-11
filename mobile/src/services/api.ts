@@ -1,6 +1,10 @@
+
 import axios, { AxiosInstance } from 'axios';
 
-const API_BASE_URL = process.env.API_URL || 'https://echo-api-prod.herokuapp.com/api';
+const API_BASE_URL = (
+  process.env.EXPO_PUBLIC_API_URL ||
+  'https://echo-ai-sales-1.onrender.com/api'
+).replace(/\/+$/, '');
 
 class ResearchAPI {
   private client: AxiosInstance;
@@ -8,7 +12,7 @@ class ResearchAPI {
   constructor() {
     this.client = axios.create({
       baseURL: API_BASE_URL,
-      timeout: 10000,
+      timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -21,7 +25,9 @@ class ResearchAPI {
   }
 
   async getResearch(queryId: string) {
-    const response = await this.client.get(`/research/${queryId}`);
+    const response = await this.client.get(
+      `/research/${encodeURIComponent(queryId)}`
+    );
     return response.data;
   }
 
@@ -34,19 +40,24 @@ class ResearchAPI {
   }
 
   async search(queryId: string, query: string) {
-    const response = await this.client.post(`/research/${queryId}/search`, {
-      query,
-    });
+    const response = await this.client.post(
+      `/research/${encodeURIComponent(queryId)}/search`,
+      { query }
+    );
     return response.data;
   }
 
   async getPatterns(queryId: string) {
-    const response = await this.client.get(`/research/${queryId}/patterns`);
+    const response = await this.client.get(
+      `/research/${encodeURIComponent(queryId)}/patterns`
+    );
     return response.data;
   }
 
   async getAlerts(queryId: string) {
-    const response = await this.client.get(`/research/${queryId}/alerts`);
+    const response = await this.client.get(
+      `/research/${encodeURIComponent(queryId)}/alerts`
+    );
     return response.data;
   }
 }
@@ -57,7 +68,10 @@ class SearchAPI {
   constructor() {
     this.client = axios.create({
       baseURL: API_BASE_URL,
-      timeout: 10000,
+      timeout: 30000,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
   }
 
@@ -74,3 +88,4 @@ class SearchAPI {
 
 export const researchAPI = new ResearchAPI();
 export const searchAPI = new SearchAPI();
+  
